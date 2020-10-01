@@ -12,14 +12,21 @@ export abstract class Scraper<T> {
 
   public scrap(urls?: Array<string>): Observable<Array<T>> {
     return new Observable((subscriber) => {
+      console.log("Gathering urls...")
       new Promise((resolve, reject) => {
         urls ? resolve(urls) : this.getAllUrls().then((urls) => resolve(urls));
       }).then((response) => {
         const urls = response as Array<string>; // TODO: figure out how to remove AS
+        console.log(`Gathered ${urls.length} urls.`);
         const delayer = interval(this.requestsIntervalMs);
         const urlsObservable = zip(from(urls), delayer).pipe(map(([url]) => url));
+        let completed = 1;
         urlsObservable.subscribe({
-          next: (url) => this.getNormalizedData(url).then((normalizedData) => subscriber.next([normalizedData])),
+          next: async (url) => {
+            console.log(`${completed}/${urls.length} Gathering data from ${url}`);
+            const normalizedData = await this.getNormalizedData(url);
+            subscriber.next([normalizedData]);
+          },
           complete: () => setTimeout(() => subscriber.complete(), this.requestsIntervalMs),
         });
       });
