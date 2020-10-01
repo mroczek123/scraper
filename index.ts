@@ -26,6 +26,7 @@ export abstract class Scraper<T> {
             console.log(`${completed}/${urls.length} Gathering data from ${url}`);
             const normalizedData = await this.getNormalizedData(url);
             subscriber.next([normalizedData]);
+            completed++;
           },
           complete: () => setTimeout(() => subscriber.complete(), this.requestsIntervalMs),
         });
